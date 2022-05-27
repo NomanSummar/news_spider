@@ -1,3 +1,5 @@
+import datetime
+
 from scrapy.crawler import CrawlerProcess
 from scrapy import Spider, Request
 
@@ -20,6 +22,7 @@ class InsideEv(Spider):
             'xlsx': 'scrapy_xlsx.XlsxItemExporter',
         },
     }
+    headings = []
 
     def parse(self, response, **kwargs):
         if 'cleantech' in response.url:
@@ -67,23 +70,33 @@ class InsideEv(Spider):
     def get_article(self, response):
         if 'insideevs' in response.url:
             heading = response.css('.m1-article-title::text').get()
+            if heading in self.headings:
+                return
+            self.headings.append(heading)
             some_text = response.css('p::text').get()
             link = response.url
             date = response.css('.date-data::text').get()
+            date = datetime.datetime.strptime(date, '%b %d, %Y')
+
             yield {
-                'Date': date,
+                'Date': str(date),
                 "Headline": heading,
                 'Some text': some_text,
                 'URL': link
             }
         else:
             url = response.url
+            heading = response.css('.post-date::attr(datetime)').get()
+            if heading in self.headings:
+                return
+            self.headings.append(heading)
             some_text = response.css('.zox-post-body p::text').get()
             if not some_text or len(some_text) < 150:
                 some_text = response.css('p:nth-child(2)::text').get()
-
+            date = response.css('.post-date::attr(datetime)').get()
+            date = datetime.datetime.strptime(date, '%Y-%m-%d')
             yield {
-                'Date': response.css('.post-date::attr(datetime)').get(),
+                'Date': str(date),
                 "Headline": response.css('.entry-title::text').get(),
                 'Some text': some_text,
                 'URL': url
