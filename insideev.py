@@ -73,11 +73,15 @@ class InsideEv(Spider):
             if heading in self.headings:
                 return
             self.headings.append(heading)
-            some_text = response.css('p::text').get()
+            some_text = response.css('.e-content > p::text').get()
+            # .meta+ p
+            if not some_text or len(some_text) < 150:
+                some_text = response.css('.meta+ p::text').get()
             link = response.url
             date = response.css('.date-data::text').get()
             date = datetime.datetime.strptime(date, '%b %d, %Y')
-
+            if not some_text or len(some_text) < 100:
+                return
             yield {
                 'Date': str(date),
                 "Headline": heading,
@@ -90,9 +94,12 @@ class InsideEv(Spider):
             if heading in self.headings:
                 return
             self.headings.append(heading)
-            some_text = response.css('.zox-post-body p::text').get()
+            some_text = response.css('.zox-post-excerpt p::text').get()
             if not some_text or len(some_text) < 150:
-                some_text = response.css('p:nth-child(2)::text').get()
+                some_text = " ".join(response.css('.zox-post-body p::text').extract())
+                some_text = some_text[:500] + '....'
+            if not some_text or len(some_text) < 100:
+                return
             date = response.css('.post-date::attr(datetime)').get()
             date = datetime.datetime.strptime(date, '%Y-%m-%d')
             yield {
