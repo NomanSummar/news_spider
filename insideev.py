@@ -12,11 +12,12 @@ class InsideEv(Spider):
                   ]
 
     custom_settings = {
+        'LOG_FILE': 'last_run.log',
         'user-agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) '
                       'Chrome/101.0.4951.67 Mobile Safari/537.36',
         'FEED_EXPORT_ENCODING': 'UTF-8',
         'FEEDS': {
-            f"posts.xlsx": {"format": "xlsx"}
+            f"news_spider/posts.xlsx": {"format": "xlsx"}
         },
         "FEED_EXPORTERS": {
             'xlsx': 'scrapy_xlsx.XlsxItemExporter',
