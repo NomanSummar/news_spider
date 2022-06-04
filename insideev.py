@@ -71,18 +71,18 @@ class InsideEv(Spider):
     def get_article(self, response):
         if 'insideevs' in response.url:
             heading = response.css('.m1-article-title::text').get()
-            if heading in self.headings:
-                return
-            self.headings.append(heading)
-            some_text = response.css('.e-content > p::text').get()
-            # .meta+ p
-            if not some_text or len(some_text) < 150:
-                some_text = response.css('.meta+ p::text').get()
+            some_text = ''
+            text = response.css('.e-content p::text').extract()
+            for tex in text:
+                if 'EVANNEX' in tex:
+                    continue
+                if len(some_text) <= 400:
+                    some_text = some_text + tex.strip()
+                else:
+                    break
             link = response.url
             date = response.css('.date-data::text').get()
             date = datetime.datetime.strptime(date, '%b %d, %Y')
-            if not some_text or len(some_text) < 100:
-                return
             yield {
                 'Date': str(date),
                 "Headline": heading,
@@ -92,15 +92,13 @@ class InsideEv(Spider):
         else:
             url = response.url
             heading = response.css('.post-date::attr(datetime)').get()
-            if heading in self.headings:
-                return
-            self.headings.append(heading)
-            some_text = response.css('.zox-post-excerpt p::text').get()
-            if not some_text or len(some_text) < 150:
-                some_text = " ".join(response.css('.zox-post-body p::text').extract())
-                some_text = some_text[:500] + '....'
-            if not some_text or len(some_text) < 100:
-                return
+            text = response.css('.zox-post-body p::text').extract()
+            some_text = ''
+            for index, tex in enumerate(text):
+                if len(some_text) <= 400:
+                    some_text = some_text + tex.strip()
+                else:
+                    break
             date = response.css('.post-date::attr(datetime)').get()
             date = datetime.datetime.strptime(date, '%Y-%m-%d')
             yield {
