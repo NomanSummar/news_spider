@@ -1,5 +1,5 @@
 import datetime
-
+from datetime import date, timedelta
 from scrapy.crawler import CrawlerProcess
 from scrapy import Spider, Request
 
@@ -8,8 +8,10 @@ class InsideEv(Spider):
     name = 'InsideEv'
     base_url = 'https://insideevs.com'
     start_urls = ['https://insideevs.com/news/?p=1',
-                  'https://cleantechnica.com/category/clean-transport-2/electric-vehicles/'
+                  'https://cleantechnica.com/category/clean-transport-2/electric-vehicles/',
+                  'https://electrek.co/2022/04/20/'
                   ]
+    electrek_url = 'https://electrek.co/'
 
     custom_settings = {
         'LOG_FILE': 'last_run.log',
@@ -26,7 +28,7 @@ class InsideEv(Spider):
     headings = []
 
     def parse(self, response, **kwargs):
-        if 'cleantech' in response.url:
+        if 'cleantechnica' in response.url:
             articles = response.css('.zox-art-title a::attr(href)').extract()
             for link in articles:
                 yield Request(
@@ -50,7 +52,18 @@ class InsideEv(Spider):
                         callback=self.parse,
                         meta={"exist": True}
                     )
-        else:
+        elif 'electrek.co' in response.url:
+            start_date = date.today()
+            end_date = date(2015, 11, 16)
+            delta = timedelta(days=1)
+            while start_date >= end_date:
+                yield Request(
+                    url=self.electrek_url + start_date.strftime("%Y/%m/%d") + '/',
+                    callback=self.get_article
+                )
+                # print(start_date.strftime("%Y/%m/%d"))
+                start_date -= delta
+        elif 'insideevs':
             if '<h1>404 Page not found</h1>' in response.text:
                 return
             links = response.css('.browseBox-half h3 a::attr(href)').extract()
@@ -89,6 +102,24 @@ class InsideEv(Spider):
                 'Some text': some_text,
                 'URL': link
             }
+        if 'electrek.co' in response.url:
+            posts = response.css('.post-content')
+            for post in posts:
+                if post.css('div h1 a::attr(href)').get():
+                    post.css('.post-body p::text').extract()
+                    some_text = ''.join(post.css('.post-body p::text').extract())
+                    if 'Quick Charge is available now on\xa0,\xa0,\xa0\xa0and our\xa0for Overcast and other podcast ' \
+                       'players. ' in some_text:
+                        some_text = some_text.replace(
+                            'Quick Charge is available now on\xa0,\xa0,\xa0\xa0and our\xa0for '
+                            'Overcast and other podcast players. ', '')
+
+                    yield {
+                        'Date': str(datetime.datetime.strptime(response.url.split('co/')[-1][:-1].strip(), '%Y/%m/%d')),
+                        'Headline': post.css('div h1 a::text').get(),
+                        'Some text': some_text,
+                        'URL': post.css('div h1 a::attr(href)').get(),
+                    }
         else:
             url = response.url
             heading = response.css('.post-date::attr(datetime)').get()
