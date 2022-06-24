@@ -14,7 +14,7 @@ class InsideEv(Spider):
     electrek_url = 'https://electrek.co/'
 
     custom_settings = {
-        'LOG_FILE': 'last_run.log',
+        # 'LOG_FILE': 'last_run.log',
         'user-agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) '
                       'Chrome/101.0.4951.67 Mobile Safari/537.36',
         'FEED_EXPORT_ENCODING': 'UTF-8',
@@ -102,7 +102,7 @@ class InsideEv(Spider):
                 'Some text': some_text,
                 'URL': link
             }
-        if 'electrek.co' in response.url:
+        elif 'electrek.co' in response.url:
             posts = response.css('.post-content')
             for post in posts:
                 if post.css('div h1 a::attr(href)').get():
