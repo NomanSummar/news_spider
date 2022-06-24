@@ -85,7 +85,7 @@ class InsideEv(Spider):
         if 'insideevs' in response.url:
             heading = response.css('.m1-article-title::text').get()
             some_text = ''
-            text = response.css('.e-content p::text').extract()
+            text = response.css('.e-content p *::text').extract()
             for tex in text:
                 if 'EVANNEX' in tex:
                     continue
@@ -106,8 +106,8 @@ class InsideEv(Spider):
             posts = response.css('.post-content')
             for post in posts:
                 if post.css('div h1 a::attr(href)').get():
-                    post.css('.post-body p::text').extract()
-                    some_text = ''.join(post.css('.post-body p::text').extract())
+                    post.css('.post-body p *::text').extract()
+                    some_text = ''.join(post.css('.post-body p *::text').extract())
                     if 'Quick Charge is available now on\xa0,\xa0,\xa0\xa0and our\xa0for Overcast and other podcast ' \
                        'players. ' in some_text:
                         some_text = some_text.replace(
@@ -123,11 +123,11 @@ class InsideEv(Spider):
         else:
             url = response.url
             heading = response.css('.post-date::attr(datetime)').get()
-            text = response.css('.zox-post-body p::text').extract()
+            text = response.css('.zox-post-body p *::text').extract()
             some_text = ''
             for index, tex in enumerate(text):
                 if len(some_text) <= 400:
-                    some_text = some_text + tex.strip()
+                    some_text = some_text + tex.strip() + ' '
                 else:
                     break
             date = response.css('.post-date::attr(datetime)').get()
